@@ -1,2 +1,3 @@
 node_modules
 client/test/compiled.js
+client/src/data.json
