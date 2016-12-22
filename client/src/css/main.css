@@ -1,0 +1,38 @@
+
+#validation {
+    color: red;
+}
+
+.search-fields {
+    padding-top: 20px;
+    background-image: -webkit-linear-gradient(top,#563d7c 0,#6f5499 100%);
+    color: #cdbfe3;
+}
+/*.container {
+    width: 750px;
+    padding-right: 15px;
+    padding-left: 15px;
+    margin-right: auto;
+    margin-left: auto;
+}*/
+
+.has-error .form-control, .has-error .select2-dropdown, .has-error .select2-selection {
+    border-width: 5px;
+}
+
+.has-error .select2-dropdown, .has-error .select2-selection {
+    padding-top: 6px !important;
+}
+
+#loader {
+    margin-top:20px;
+    padding-right: 15px;
+    padding-left: 15px;
+    margin-right: auto;
+    margin-left: auto;
+    width: 200px;
+}
+
+.hide {
+    display: none;
+}
