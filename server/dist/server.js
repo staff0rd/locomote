@@ -8,7 +8,7 @@ const Airports_1 = require("./routes/Airports");
 const Search_1 = require("./routes/Search");
 const corsOptions = {
     optionsSuccessStatus: 200,
-    origin: "http://lvh.me:9000",
+    origin: "*",
 };
 class App {
     constructor() {
@@ -22,6 +22,7 @@ class App {
         this.express.use(bodyParser.urlencoded({ extended: false }));
     }
     configureRoutes() {
+        this.express.use("/", express.static("../client/src"));
         this.express.use("/airlines", Airlines_1.default);
         this.express.use("/airports", Airports_1.default);
         this.express.use("/search", Search_1.default);

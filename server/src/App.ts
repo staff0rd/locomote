@@ -8,7 +8,7 @@ import Search from "./routes/Search";
 
 const corsOptions = {
   optionsSuccessStatus: 200,
-  origin: "http://lvh.me:9000",
+  origin: "*",
 };
 
 class App {
@@ -28,6 +28,7 @@ class App {
   }
 
   private configureRoutes(): void {
+    this.express.use("/", express.static("../client/src"));
     this.express.use("/airlines", Airlines);
     this.express.use("/airports", Airports);
     this.express.use("/search", Search);

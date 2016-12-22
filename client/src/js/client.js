@@ -14632,7 +14632,7 @@ exports.Cells = Cells;
 },{}],5:[function(require,module,exports){
 "use strict";
 const $ = require("jquery");
-const HOST = "http://lvh.me:3000";
+const HOST = "//localhost:3000";
 exports.ENDPOINTS = {
     airlines: "/airlines",
     airports: "/airports",

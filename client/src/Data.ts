@@ -1,6 +1,6 @@
 import * as $ from "jquery";
 
-const HOST = "http://lvh.me:3000";
+const HOST = "//localhost:3000";
 
 export const ENDPOINTS = {
     airlines: "/airlines",
