@@ -1,6 +1,7 @@
 #!/bin/bash
 
-npm i server
-npm i client
-cd server
+cd client
+npm install
+cd ../server 
+npm install
 node dist/server.js

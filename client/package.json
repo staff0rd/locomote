@@ -15,7 +15,6 @@
     "@types/bootstrap-datepicker": "0.0.5",
     "@types/jquery": "^2.0.34",
     "@types/jquery.datatables": "^1.10.33",
-    "@types/moment": "^2.13.0",
     "@types/select2": "^4.0.30",
     "browserify": "^13.1.1",
     "electron-prebuilt": "^1.4.12",
