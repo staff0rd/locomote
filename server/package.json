@@ -31,6 +31,7 @@
     "gulp-tslint": "^7.0.1",
     "gulp-util": "^3.0.7",
     "mocha": "^3.2.0",
+    "moment": "^2.17.1",
     "ts-node": "^1.7.2",
     "tsify": "^2.0.7",
     "tslint": "^4.1.1",

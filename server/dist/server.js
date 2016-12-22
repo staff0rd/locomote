@@ -170,7 +170,9 @@ exports.BaseRouter = BaseRouter;
 
 },{"../LocomoteApi":2,"express":undefined}],7:[function(require,module,exports){
 "use strict";
+const moment = require("moment");
 const BaseRouter_1 = require("./BaseRouter");
+const DATE_SPREAD = 2;
 class Search extends BaseRouter_1.BaseRouter {
     init() {
         this.router.get("/:from/:to/:date", (req, res) => this.search(req, res));
@@ -178,29 +180,52 @@ class Search extends BaseRouter_1.BaseRouter {
     search(req, res) {
         this.api.getAirlines().then((airlines) => {
             const searchEach = airlines.map((airline) => {
-                return this.api.getFlightSearch(airline.code, req.params.date, req.params.from, req.params.to)
-                    .then((data) => {
-                    /* tslint:disable:object-literal-sort-keys */
-                    return data.map((flight) => {
-                        return {
-                            key: flight.key,
-                            flightNum: flight.flightNum,
-                            airlineName: flight.airline.name,
-                            startTime: flight.start.dateTime,
-                            finishTime: flight.finish.dateTime,
-                            durationMin: flight.durationMin,
-                            price: flight.price,
-                        };
-                    });
-                });
+                return this.getDateSpread(airline.code, req.params.date, req.params.from, req.params.to);
             });
-            this.sendResponse(Promise.all(searchEach).then((searchResults) => {
+            const all = [].concat.apply([], searchEach);
+            this.sendResponse(Promise.all(all).then((searchResults) => {
                 return this.merge(searchResults);
             }), res);
         });
     }
+    getDateSpread(airlineCode, date, from, to) {
+        const dates = [];
+        for (let i = -DATE_SPREAD; i <= DATE_SPREAD; i++) {
+            const currentDate = moment(date).add(i, "day").startOf("day");
+            dates.push(currentDate.format("YYYY-MM-DD"));
+        }
+        return dates.map((flightDate) => this.getDate(airlineCode, flightDate, from, to).catch(() => {
+            return { date, flights: [] };
+        }));
+    }
+    getDate(airlineCode, date, from, to) {
+        return this.api.getFlightSearch(airlineCode, date, from, to).then((data) => {
+            return {
+                date,
+                flights: data.map((flight) => {
+                    /* tslint:disable:object-literal-sort-keys */
+                    return {
+                        key: flight.key,
+                        flightNum: flight.flightNum,
+                        airlineName: flight.airline.name,
+                        startTime: flight.start.dateTime,
+                        finishTime: flight.finish.dateTime,
+                        durationMin: flight.durationMin,
+                        price: flight.price,
+                    };
+                }),
+            };
+        });
+    }
     merge(results) {
-        return [].concat.apply([], results);
+        const categorised = {};
+        results.forEach((result) => {
+            if (!categorised[result.date]) {
+                categorised[result.date] = [];
+            }
+            categorised[result.date] = categorised[result.date].concat(result.flights);
+        });
+        return categorised;
     }
 }
 exports.Search = Search;
@@ -210,4 +235,4 @@ const router = routes.router;
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.default = router;
 
-},{"./BaseRouter":6}]},{},[3]);
+},{"./BaseRouter":6,"moment":undefined}]},{},[3]);

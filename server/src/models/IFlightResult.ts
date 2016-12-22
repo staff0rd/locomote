@@ -1,4 +1,4 @@
-export interface ISearchResult {
+export interface IFlightResult {
     key: string;
     flightNum: string;
     airlineName: string;

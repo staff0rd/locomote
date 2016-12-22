@@ -14526,11 +14526,9 @@ return hooks;
 },{}],3:[function(require,module,exports){
 "use strict";
 const $ = require("jquery");
-const moment = require("moment");
-const Cells_1 = require("./Cells");
 const Data_1 = require("./Data");
 const Search_1 = require("./Search");
-const Utils_1 = require("./Utils");
+const TabLayout_1 = require("./TabLayout");
 class App {
     constructor() {
         $("#search-form").submit((ev) => {
@@ -14560,9 +14558,10 @@ class App {
             url: (params) => `${Data_1.Data.getEndpoint(Data_1.ENDPOINTS.airports)}/${params.term}`,
         };
         $.fn.select2.defaults.set("theme", "bootstrap");
-        $("#from").select2({ ajax: ajaxOptions, minimumInputLength: 1, placeholder: "Flying from" });
-        $("#to").select2({ ajax: ajaxOptions, minimumInputLength: 1, placeholder: "Flying to" });
+        $("#from").select2({ ajax: ajaxOptions, minimumInputLength: 2, placeholder: "Flying from" });
+        $("#to").select2({ ajax: ajaxOptions, minimumInputLength: 2, placeholder: "Flying to" });
         $("#loader").addClass("hide");
+        //$.get("data.json").then((result) => this.layoutResults(result));
     }
     submit() {
         $("#from,#to,#date").parent().removeClass("has-error");
@@ -14574,7 +14573,7 @@ class App {
             $("#submit").button("loading");
             $("#loader").removeClass("hide");
             search.execute().then((data) => {
-                this.layout(data);
+                this.layoutResults(data);
                 $("#submit").button("reset");
                 $("#loader").addClass("hide");
             }).fail((error) => {
@@ -14599,39 +14598,25 @@ class App {
             $(`#${id}`).parent().addClass("has-error");
         }
     }
-    layout(searchResult) {
-        const rows = [];
-        searchResult.forEach((result) => {
-            const cells = new Cells_1.Cells()
-                .add(result.airlineName)
-                .add(result.flightNum)
-                .add(moment(result.startTime).format("hh:mm a"), `data-order="${moment(result.startTime).toISOString()}"`)
-                .add(moment(result.finishTime).format("hh:mm a"), `data-order="${moment(result.startTime).toISOString()}"`)
-                .add(Utils_1.Utils.getDuration(result.durationMin), `data-order="${result.durationMin}"`)
-                .add(parseFloat(String(result.price)).toFixed(2));
-            rows.push(`<tr>${cells.data}</tr>`);
+    layoutResults(searchResult) {
+        const tabs = new TabLayout_1.TabLayout(searchResult);
+        $("#result").html(tabs.getHtml());
+        $("#result table").DataTable({
+            dom: "<t><\"col-sm-4\"l><\"col-sm-4\"i>p",
+            order: [[2, "asc"]],
         });
-        $("#result").html(`
-        <h2>Flights</h2>
-        <table class="table">
-            <thead>
-                <tr>
-                    <th>Airline</th>
-                    <th>Flight#</th>
-                    <th>Departure</th>
-                    <th>Arrival</th>
-                    <th>Duration</th>
-                    <th>Price</th>
-                </tr>
-            </thead>
-            <tbody>${rows.join("")}
-        </tbody></table>`);
-        $("#result table").DataTable({ searching: false, order: [[2, "asc"]] });
+        $('a[data-toggle="tab"]').click((e) => {
+            e.preventDefault();
+            $(e.target).tab("show");
+        });
+        if (tabs.dates.length) {
+            $($('a[data-toggle="tab"]')[tabs.active]).tab("show");
+        }
     }
 }
 exports.App = App;
 
-},{"./Cells":4,"./Data":5,"./Search":6,"./Utils":7,"jquery":1,"moment":2}],4:[function(require,module,exports){
+},{"./Data":5,"./Search":6,"./TabLayout":7,"jquery":1}],4:[function(require,module,exports){
 "use strict";
 class Cells {
     constructor() {
@@ -14720,6 +14705,79 @@ exports.Search = Search;
 
 },{"./Data":5,"moment":2}],7:[function(require,module,exports){
 "use strict";
+const moment = require("moment");
+const Cells_1 = require("./Cells");
+const Utils_1 = require("./Utils");
+class TabLayout {
+    constructor(dates) {
+        this.dates = Object.keys(dates).map((key) => ({ date: key, flights: dates[key] }));
+        this.active = Math.max(0, this.dates.length - 3);
+    }
+    getHtml() {
+        return "<h2>Flights</h2><div id='tabs'>" + this.getHeader() + this.getPanes() + "</div>";
+    }
+    getHeader() {
+        let header = `<ul class='nav nav-tabs'>`;
+        header += this.dates.map((dr) => `
+            <li>
+                <a href='#${this.getId(dr.date)}' 
+                    data-toggle='tab'${this.dates[this.active].date === dr.date ? " class='active'" : ""}>
+                        ${moment(dr.date).format("ddd, Do MMM")}
+                </a>
+            </li>`).join("");
+        header += `</ul>`;
+        return header;
+    }
+    getPanes() {
+        let panes = `<div class="tab-content">`;
+        panes += this.dates.map((dr) => `
+            <div class="tab-pane${this.dates[this.active].date === dr.date ? " active" : ""}" 
+                id="${this.getId(dr.date)}">
+                    ${this.getTable(dr)}
+            </div>`).join("");
+        panes += `</div>`;
+        return panes;
+    }
+    getId(dateString) {
+        return `result-${dateString}`;
+    }
+    getTable(searchResult) {
+        const rows = this.getRows(searchResult);
+        const table = `
+        <table class="table">
+            <thead>
+                <tr>
+                    <th>Airline</th>
+                    <th>Flight#</th>
+                    <th>Departure</th>
+                    <th>Arrival</th>
+                    <th>Duration</th>
+                    <th>Price</th>
+                </tr>
+            </thead>
+            <tbody>${rows.join("")}
+        </tbody></table>`;
+        return table;
+    }
+    getRows(searchResult) {
+        const rows = [];
+        searchResult.flights.forEach((result) => {
+            const cells = new Cells_1.Cells()
+                .add(result.airlineName)
+                .add(result.flightNum)
+                .add(moment(result.startTime).format("hh:mm a"), `data-order="${moment(result.startTime).toISOString()}"`)
+                .add(moment(result.finishTime).format("hh:mm a"), `data-order="${moment(result.startTime).toISOString()}"`)
+                .add(Utils_1.Utils.getDuration(result.durationMin), `data-order="${result.durationMin}"`)
+                .add("$" + parseFloat(String(result.price)).toFixed(2).replace(/(\d)(?=(\d{3})+\.)/g, "$1,"));
+            rows.push(`<tr>${cells.data}</tr>`);
+        });
+        return rows;
+    }
+}
+exports.TabLayout = TabLayout;
+
+},{"./Cells":4,"./Utils":8,"moment":2}],8:[function(require,module,exports){
+"use strict";
 class Utils {
     // need this because moment duration is not precise
     static getDuration(totalMins) {
@@ -14737,7 +14795,7 @@ class Utils {
 }
 exports.Utils = Utils;
 
-},{}],8:[function(require,module,exports){
+},{}],9:[function(require,module,exports){
 "use strict";
 const $ = require("jquery");
 const App_1 = require("./App");
@@ -14747,4 +14805,4 @@ window.onload = () => {
     const app = new App_1.App();
 };
 
-},{"./App":3,"jquery":1}]},{},[8]);
+},{"./App":3,"jquery":1}]},{},[9]);

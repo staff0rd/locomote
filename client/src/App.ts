@@ -1,11 +1,11 @@
 import * as $ from "jquery";
 import * as moment from "moment";
-import {Cells} from "./Cells";
+
 import {Data, ENDPOINTS} from "./Data";
 import {Search} from "./Search";
+import {TabLayout} from "./TabLayout";
 
-import {ISearchResult} from "../../server/src/models/ISearchResult";
-import {Utils} from "./Utils";
+import {IDateResult} from "../../server/src/models/IDateResult";
 
 export class App {
     constructor() {
@@ -38,9 +38,10 @@ export class App {
         };
 
         $.fn.select2.defaults.set("theme", "bootstrap");
-        $("#from").select2({ ajax: ajaxOptions, minimumInputLength: 1, placeholder: "Flying from"});
-        $("#to").select2({ ajax: ajaxOptions, minimumInputLength: 1, placeholder: "Flying to"});
+        $("#from").select2({ ajax: ajaxOptions, minimumInputLength: 2, placeholder: "Flying from"});
+        $("#to").select2({ ajax: ajaxOptions, minimumInputLength: 2, placeholder: "Flying to"});
         $("#loader").addClass("hide");
+        //$.get("data.json").then((result) => this.layoutResults(result));
     }
 
     private submit() {
@@ -58,7 +59,7 @@ export class App {
             (<any> $("#submit")).button("loading");
             $("#loader").removeClass("hide");
             search.execute().then((data) => {
-                this.layout(data);
+                this.layoutResults(data);
                 (<any> $("#submit")).button("reset");
                 $("#loader").addClass("hide");
             }).fail((error) => {
@@ -84,35 +85,21 @@ export class App {
         }
     }
 
-    private layout(searchResult: ISearchResult[]) {
-        const rows: string[] = [];
-        searchResult.forEach((result) => {
-            const cells = new Cells()
-            .add(result.airlineName)
-            .add(result.flightNum)
-            .add(moment(result.startTime).format("hh:mm a"), `data-order="${moment(result.startTime).toISOString()}"`)
-            .add(moment(result.finishTime).format("hh:mm a"), `data-order="${moment(result.startTime).toISOString()}"`)
-            .add(Utils.getDuration(result.durationMin), `data-order="${result.durationMin}"`)
-            .add(parseFloat(String(result.price)).toFixed(2));
-
-            rows.push(`<tr>${cells.data}</tr>`);
+    private layoutResults(searchResult: any) {
+        const tabs = new TabLayout(searchResult);
+        $("#result").html(tabs.getHtml());
+        $("#result table").DataTable({
+            dom: "<t><\"col-sm-4\"l><\"col-sm-4\"i>p",
+            order: [[2, "asc"]],
         });
 
-        $("#result").html(`
-        <h2>Flights</h2>
-        <table class="table">
-            <thead>
-                <tr>
-                    <th>Airline</th>
-                    <th>Flight#</th>
-                    <th>Departure</th>
-                    <th>Arrival</th>
-                    <th>Duration</th>
-                    <th>Price</th>
-                </tr>
-            </thead>
-            <tbody>${rows.join("")}
-        </tbody></table>`);
-        $("#result table").DataTable({searching: false, order: [[2, "asc"]]});
+        $('a[data-toggle="tab"]').click((e) => {
+            e.preventDefault();
+            (<any> $(e.target)).tab("show");
+        });
+
+        if (tabs.dates.length) {
+            (<any> $($('a[data-toggle="tab"]')[tabs.active])).tab("show");
+        }
     }
 }

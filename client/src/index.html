@@ -36,7 +36,7 @@
                     <div class="form-group form-group-lg">
                         <label class="col-sm-2 control-label" for="date">Departing</label>
                         <div class="col-sm-5">
-                            <div class="input-group date" data-provide="datepicker" data-date-autoclose="true" data-date-format="DD, d MM yyyy">
+                            <div class="input-group date" data-provide="datepicker" data-date-autoclose="true" data-date-format="DD, d MM yyyy" data-date-start-date="new Date()">
                                 <input type="text" class="form-control" placeholder="Departing on" id="date">
                                 <div class="input-group-addon">
                                     <span class="glyphicon glyphicon-th"></span>
@@ -57,7 +57,9 @@
             <div id="loader">
                 <img src="img/gears.gif" alt="Searching..." title="Searching..." />
             </div>
-            <div id='result'></div>
+            <div class="col-sm-12">
+                <div id='result'></div>
+            </div>
         </div>
         
         <script type='text/javascript' src='js/client.js'></script>
